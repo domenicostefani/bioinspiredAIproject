@@ -11,35 +11,10 @@ import os
 import life
 
 # Grid size
-N = 10
+N = 100
 # Genotypes
-glider = np.array([1,4,
-                     2,5,
-                     3,3,
-                     3,4,
-                     3,5,
-                     -1,-1,
-                     -1,-1,
-                     -1,-1,
-                     -1,-1,
-                     -1,-1,
-                     -1,-1,
-                     -1,-1])
-line3 = np.array([4,4,
-                  4,5,
-                  4,6,
-                  -1,-1,
-                  -1,-1,
-                  -1,-1,
-                  -1,-1,
-                  -1,-1,
-                  -1,-1,
-                  -1,-1,
-                  -1,-1,
-                  -1,-1])
+glider = np.zeros(25)
 
-#Set the genotype
-genotype = line3
 #set grid size
 life.set_grid_size(N)
 
@@ -51,7 +26,7 @@ life.set_grid_size(N)
 """
  * Run life and evaluate of the number of cells that are born and die
 """
-life.display(life.genotype_to_grid(genotype))
+life.display(life.genotype_to_grid(glider))
 [cb,cd] = life.automata_cellscount(genotype)
 print("cellsborn: " + str(cb))
 print("cellsdead: " + str(cd))
