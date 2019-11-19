@@ -9,7 +9,6 @@
 
 import numpy as np
 import math
-import timeit
 
 """genotype mode"""
 # GENOTYPE = "cardinal" # vector of cell coordinates
@@ -67,9 +66,6 @@ def display(mgrid):
 
 ## Update the grid by applying life rules
 #
-#  TODO: change function name?
-#  TODO: remove toroidal rules that wrap the grig around and allows cells to go
-#        out from a side and come back in on the other side
 def update(grid):
     grid = grid.astype(int)
     mask = np.zeros((N,N), dtype=bool)
@@ -170,7 +166,6 @@ def automatonsize(bounds):
     return (min_max_i[1] - min_max_i[0] + 1) * (min_max_j[1] - min_max_j[0] + 1)
 
 def compute_fitness(genotype,max_it,target):
-    start = timeit.default_timer() #REMOVE TODO
     distance = math.inf # inverse of proximity
     size = math.inf # inverse of compactness
     iterations = math.inf # inverse of speed
@@ -191,54 +186,50 @@ def compute_fitness(genotype,max_it,target):
         iterations = i
         automaton = update(automaton)
 
-        # ### Stopping
-        # # 1. Target reached
-        # if automaton[xt,yt] == True:
-        #     print("# Stopping: Target reached\n")
-        #     reached = True
-        #     break
-        #
-        # # 2. Death
-        # if np.sum(automaton.astype(int)) == 0 :
-        #     print("# Stopping: Automata died at iteration " + str(i))
-        #     break
-        # # 3. Static behaviour
-        # if(np.array_equal(previous_automaton,automaton)):
-        #     print("# Stopping: Automata became static at iteration " + str(i))
-        #     break
-        # # 4. Repetitive behaviour
-        # if(np.array_equal(previous_previous_automaton,automaton)):
-        #     print("# Stopping: Automata became repetitive at iteration " + str(i))
-        #     break
+        ### Stopping
+        # 1. Target reached
+        if automaton[xt,yt] == True:
+            print("# Stopping: Target reached\n")
+            reached = True
+            break
 
+        # 2. Death
+        if np.sum(automaton.astype(int)) == 0 :
+            print("# Stopping: Automata died at iteration " + str(i))
+            break
+        # 3. Static behaviour
+        if(np.array_equal(previous_automaton,automaton)):
+            print("# Stopping: Automata became static at iteration " + str(i))
+            break
+        # 4. Repetitive behaviour
+        if(np.array_equal(previous_previous_automaton,automaton)):
+            print("# Stopping: Automata became repetitive at iteration " + str(i))
+            break
 
-    stop = timeit.default_timer()
-    print('Time: ', stop - start)
+    display(automaton)
 
-    # display(automaton)
-    #
-    # """ Simulation finished, evaluate results """
-    # boundaries = bounds(automaton)
-    #
-    # # distance
-    # if reached:
-    #     distance = 0
-    # else:
-    #     xc,yc = center_of_mass(boundaries)
-    #     if DISTANCE == "euclidean":
-    #         distance = ((xc - xt)**2) + ((yc - yt)**2)
-    #     elif DISTANCE == "chebyshev":
-    #         distance = max(abs(xc - xt),abs(yc - yt))
-    #
-    # # size
-    # size = automatonsize(boundaries)
-    #
-    # # iterations
-    # iterations += 1
-    #
-    # print("Distance: " + str(distance))
-    # print("Size: " + str(size))
-    # print("Iterations: " + str(iterations))
+    """ Simulation finished, evaluate results """
+    boundaries = bounds(automaton)
+
+    # distance
+    if reached:
+        distance = 0
+    else:
+        xc,yc = center_of_mass(boundaries)
+        if DISTANCE == "euclidean":
+            distance = ((xc - xt)**2) + ((yc - yt)**2)
+        elif DISTANCE == "chebyshev":
+            distance = max(abs(xc - xt),abs(yc - yt))
+
+    # size
+    size = automatonsize(boundaries)
+
+    # iterations
+    iterations += 1
+
+    print("Distance: " + str(distance))
+    print("Size: " + str(size))
+    print("Iterations: " + str(iterations))
 
 
     return distance,size,iterations
