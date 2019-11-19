@@ -9,10 +9,22 @@
 
 import numpy as np
 import math
+import timeit
+
+"""genotype mode"""
+# GENOTYPE = "cardinal" # vector of cell coordinates
+GENOTYPE = "matrix"   # matrix
+
+if GENOTYPE == "cardinal":
+    GENOTYPE_SIZE = 10
+elif GENOTYPE == "matrix":
+    GENOTYPExSIZE = 10
+    GENOTYPEySIZE = 10
+    PLACEMENT = (10,0)
 
 """distance rules"""
-DISTANCE = "euclidean"
-# DISTANCE = "chebyshev"
+# DISTANCE = "euclidean"
+DISTANCE = "chebyshev"
 
 """toroidal rules"""
 TOROIDAL = False
@@ -27,6 +39,7 @@ min_bound = -1
 max_bound = -1
 ## Set grid size
 def set_grid_size(n):
+    assert(n > 0)
     global N
     global min_bound
     global max_bound
@@ -47,9 +60,9 @@ def display(mgrid):
     for i in range(min_bound,max_bound):
         for j in range(min_bound,max_bound):
             if mgrid[i,j] == False:
-                print("  ", end = '')
+                print("░░", end = '')
             else:
-                print("█ ", end = '')
+                print("██", end = '')
         print("")
 
 ## Update the grid by applying life rules
@@ -77,8 +90,6 @@ def update(grid):
                             grid[(i-1), j] + grid[(i+1), j] +
                             grid[(i-1), (j-1)] + grid[(i-1), (j+1)] +
                             grid[(i+1), (j-1)] + grid[(i+1), (j+1)])
-
-
             # apply Conway's rules
             if grid[i, j]  == True:
                 if (total < 2) or (total > 3):
@@ -90,7 +101,7 @@ def update(grid):
 
 ## Traduce genotypic description into an initial configuration for the grid
 #
-def genotype_to_grid(genotype):
+def cardinal_genotype_to_grid(genotype):
     grid = np.zeros((N,N),dtype=bool)
     for i in range(int(genotype.size / 2)):
         gen = genotype.reshape((int(genotype.size / 2),2))[i]
@@ -101,6 +112,29 @@ def genotype_to_grid(genotype):
                 grid[gen[0]+1,gen[1]+1] = True
 
     return grid
+
+def matrix_genotype_to_grid(genotype):
+    assert(genotype.shape == (GENOTYPEySIZE,GENOTYPExSIZE))
+    assert((not TOROIDAL) or (PLACEMENT[0] + GENOTYPEySIZE < N))
+    assert((not TOROIDAL) or (PLACEMENT[1] + GENOTYPExSIZE < N))
+    assert((TOROIDAL) or (PLACEMENT[0] + GENOTYPEySIZE < N-2))
+    assert((TOROIDAL) or (PLACEMENT[1] + GENOTYPExSIZE < N-2))
+    grid = np.zeros((N,N),dtype=bool)
+
+    grid[PLACEMENT[1]:PLACEMENT[1]+GENOTYPEySIZE,PLACEMENT[0]:PLACEMENT[0]+GENOTYPExSIZE] = genotype
+
+    return grid
+
+def genotype_to_grid(genotype):
+    # The genotypic desciption is converted into a correct initial configuration
+    # for Life.
+    # Cardinal and matrix-form genotypes are treated differently, depending on
+    # the chosen modality
+    if GENOTYPE == "cardinal":
+        automaton = cardinal_genotype_to_grid(genotype)
+    elif GENOTYPE == "matrix":
+        automaton = matrix_genotype_to_grid(genotype)
+    return automaton
 
 def bounds(automaton):
     min_max_i = [N,0]
@@ -136,6 +170,7 @@ def automatonsize(bounds):
     return (min_max_i[1] - min_max_i[0] + 1) * (min_max_j[1] - min_max_j[0] + 1)
 
 def compute_fitness(genotype,max_it,target):
+    start = timeit.default_timer() #REMOVE TODO
     distance = math.inf # inverse of proximity
     size = math.inf # inverse of compactness
     iterations = math.inf # inverse of speed
@@ -156,50 +191,54 @@ def compute_fitness(genotype,max_it,target):
         iterations = i
         automaton = update(automaton)
 
-        ### Stopping
-        # 1. Target reached
-        if automaton[xt,yt] == True:
-            print("# Stopping: Target reached\n")
-            reached = True
-            break
+        # ### Stopping
+        # # 1. Target reached
+        # if automaton[xt,yt] == True:
+        #     print("# Stopping: Target reached\n")
+        #     reached = True
+        #     break
+        #
+        # # 2. Death
+        # if np.sum(automaton.astype(int)) == 0 :
+        #     print("# Stopping: Automata died at iteration " + str(i))
+        #     break
+        # # 3. Static behaviour
+        # if(np.array_equal(previous_automaton,automaton)):
+        #     print("# Stopping: Automata became static at iteration " + str(i))
+        #     break
+        # # 4. Repetitive behaviour
+        # if(np.array_equal(previous_previous_automaton,automaton)):
+        #     print("# Stopping: Automata became repetitive at iteration " + str(i))
+        #     break
 
-        # 2. Death
-        if np.sum(automaton.astype(int)) == 0 :
-            print("# Stopping: Automata died at iteration " + str(i))
-            break
-        # 3. Static behaviour
-        if(np.array_equal(previous_automaton,automaton)):
-            print("# Stopping: Automata became static at iteration " + str(i))
-            break
-        # 4. Repetitive behaviour
-        if(np.array_equal(previous_previous_automaton,automaton)):
-            print("# Stopping: Automata became repetitive at iteration " + str(i))
-            break
 
-    display(automaton)
+    stop = timeit.default_timer()
+    print('Time: ', stop - start)
 
-    """ Simulation finished, evaluate results """
-    boundaries = bounds(automaton)
-
-    # distance
-    if reached:
-        distance = 0
-    else:
-        xc,yc = center_of_mass(boundaries)
-        if DISTANCE == "euclidean":
-            distance = ((xc - xt)**2) + ((yc - yt)**2)
-        elif DISTANCE == "chebyshev":
-            distance = max(abs(xc - xt),abs(yc - yt))
-
-    # size
-    size = automatonsize(boundaries)
-
-    # iterations
-    iterations += 1
-
-    print("Distance: " + str(distance))
-    print("Size: " + str(size))
-    print("Iterations: " + str(iterations))
+    # display(automaton)
+    #
+    # """ Simulation finished, evaluate results """
+    # boundaries = bounds(automaton)
+    #
+    # # distance
+    # if reached:
+    #     distance = 0
+    # else:
+    #     xc,yc = center_of_mass(boundaries)
+    #     if DISTANCE == "euclidean":
+    #         distance = ((xc - xt)**2) + ((yc - yt)**2)
+    #     elif DISTANCE == "chebyshev":
+    #         distance = max(abs(xc - xt),abs(yc - yt))
+    #
+    # # size
+    # size = automatonsize(boundaries)
+    #
+    # # iterations
+    # iterations += 1
+    #
+    # print("Distance: " + str(distance))
+    # print("Size: " + str(size))
+    # print("Iterations: " + str(iterations))
 
 
     return distance,size,iterations
@@ -267,7 +306,7 @@ def stopping(automaton,previous_automaton,previous_previous_automaton,iteration)
 ## try to run life for 1000 epochs and return the maximum number of
 #  cells obtained in one epoch
 def automaton_maxsize(genotype):
-    automaton = genotype_to_grid(genotype)
+    automaton = cardinal_genotype_to_grid(genotype)
     maxsize = np.sum(automaton.astype(int))
 
     for i in range(max_iterations):
