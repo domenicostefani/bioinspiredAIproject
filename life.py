@@ -11,19 +11,18 @@ import numpy as np
 import math
 import os
 
-"""genotype mode"""
-# GENOTYPE = "cardinal" # vector of cell coordinates
-GENOTYPE = "matrix"   # matrix
+VERBOSE = False
 
-if GENOTYPE == "cardinal":
+"""genotype mode"""
+# GENOTYPE = "cartesian" # vector of cell coordinates
+GENOTYPE = "matrix"   # boolean matrix representing a correct grid
+
+if GENOTYPE == "cartesian":
     GENOTYPE_SIZE = 10
 elif GENOTYPE == "matrix":
     GENOTYPExSIZE = 10
     GENOTYPEySIZE = 10
-    PLACEMENT = (10,0)
-
-""" Life iteration number """
-max_iterations = 1000
+    PLACEMENT = (10,10)
 
 """ Configuration files for c++ core """
 CONFIGFILE = "./config/config.txt"
@@ -64,10 +63,17 @@ def savegrid(grid,filename):
         f.write("\n")
     f.close
 
+def get_random_genotype():
+    if GENOTYPE == "cartesian":
+        print("ERROR: Function not yet implemented!")
+        exit(-1)
+    elif GENOTYPE == "matrix":
+        return (np.random.rand(GENOTYPEySIZE,GENOTYPExSIZE) > 0.5)
+
 
 ## Traduce genotypic description into an initial configuration for the grid
 #
-def cardinal_genotype_to_grid(genotype):
+def cartesian_genotype_to_grid(genotype):
     grid = np.zeros((N,N),dtype=bool)
     for i in range(int(genotype.size / 2)):
         gen = genotype.reshape((int(genotype.size / 2),2))[i]
@@ -77,13 +83,14 @@ def cardinal_genotype_to_grid(genotype):
     return grid
 
 def matrix_genotype_to_grid(genotype):
-    assert(genotype.shape == (GENOTYPEySIZE,GENOTYPExSIZE))
+    assert(genotype.shape == (GENOTYPEySIZE*GENOTYPExSIZE,))
     assert(PLACEMENT[0] + GENOTYPExSIZE < N-2)
     assert(PLACEMENT[1] + GENOTYPEySIZE < N-2)
     assert(PLACEMENT[0] >= 0)
     assert(PLACEMENT[1] >= 0)
     grid = np.zeros((N,N),dtype=bool)
 
+    genotype = np.reshape(genotype,(GENOTYPEySIZE,GENOTYPExSIZE)) #from flat to matrix
     grid[PLACEMENT[1]:PLACEMENT[1]+GENOTYPEySIZE,PLACEMENT[0]:PLACEMENT[0]+GENOTYPExSIZE] = genotype
 
     return grid
@@ -91,10 +98,10 @@ def matrix_genotype_to_grid(genotype):
 def genotype_to_grid(genotype):
     # The genotypic desciption is converted into a correct initial configuration
     # for Life.
-    # Cardinal and matrix-form genotypes are treated differently, depending on
+    # cartesian and matrix-form genotypes are treated differently, depending on
     # the chosen modality
-    if GENOTYPE == "cardinal":
-        automaton = cardinal_genotype_to_grid(genotype)
+    if GENOTYPE == "cartesian":
+        automaton = cartesian_genotype_to_grid(genotype)
     elif GENOTYPE == "matrix":
         automaton = matrix_genotype_to_grid(genotype)
     return automaton
@@ -119,7 +126,7 @@ def compute_fitness(genotype,max_it,target):
     automaton = genotype_to_grid(genotype)
 
     savegrid(automaton,CONFIGFILE)
-    command = './lifecore ' + CONFIGFILE + ' ' + str(max_iterations) + ' ' +  str(target[0]) + ' ' + str(target[1]) + ' ' + RESULTSFILE
+    command = './lifecore ' + CONFIGFILE + ' ' + str(max_it) + ' ' +  str(target[0]) + ' ' + str(target[1]) + ' ' + RESULTSFILE
     output = os.system(command)
 
     if output is not 0:
@@ -129,82 +136,12 @@ def compute_fitness(genotype,max_it,target):
     distance = results[0][0]
     size = results[1][0]
     iterations = results[2][0]
+    os.remove(RESULTSFILE)
 
-    print("Distance: " + str(distance))
-    print("Size: " + str(size))
-    print("Iterations: " + str(iterations))
+    if VERBOSE:
+        print("Distance: " + str(distance))
+        print("Size: " + str(size))
+        print("Iterations: " + str(iterations))
+        print("")
 
     return distance,size,iterations
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-####### This is testing #######################################################
-## try to run life for a number of epochs and return the number of
-#  cells that are born and the ones that die
-#
-#   This includes a few stopping criteria
-def automaton_cellscount(genotype):
-    automaton = genotype_to_grid(genotype)
-    cellsborn = 0
-    cellsdead= 0
-    previous_previous_automaton = np.zeros(automaton.shape, dtype=bool)
-    previous_automaton = np.zeros(automaton.shape, dtype=bool)
-    for i in range(max_iterations):
-        previous_previous_automaton = previous_automaton
-        previous_automaton = automaton
-        [automaton,b,d] = update(automaton)
-        cellsborn += b
-        cellsdead += d
-
-        if stopping(automaton,previous_automaton,previous_previous_automaton,i):
-            break
-    return [cellsborn,cellsdead]
-
-def stopping(automaton,previous_automaton,previous_previous_automaton,iteration):
-    """ Stopping criterion: automaton death """
-    if np.sum(automaton.astype(int)) == 0 :
-        print("# WARNING: Automata died at iteration " + str(iteration))
-        return True
-    """ Stopping criterion: static behaviour """
-    if(np.array_equal(previous_automaton,automaton)):
-        print("# WARNING: Automata became static at iteration " + str(iteration))
-        return True
-    """ Stopping criterion: repetitive behaviour """
-    if(np.array_equal(previous_previous_automaton,automaton)):
-        print("# WARNING: Automata became repetitive at iteration " + str(iteration))
-        return True
-
-    #
-    # TODO: add other stopping criteria if required
-    #
-
-    return False
-
-
-####### This is testing #######################################################
-## try to run life for 1000 epochs and return the maximum number of
-#  cells obtained in one epoch
-def automaton_maxsize(genotype):
-    automaton = cardinal_genotype_to_grid(genotype)
-    maxsize = np.sum(automaton.astype(int))
-
-    for i in range(max_iterations):
-        (automaton,_,_) = update(automaton)
-        asize = np.sum(automaton.astype(int))
-        if asize > maxsize:
-            maxsize = asize
-    return maxsize
