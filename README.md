@@ -1,7 +1,7 @@
 # Ec::GoL
 ___Project for the Bio-Inspired AI 2019 course at UNITN___  
 Authors: Domenico Stefani, Daniele Campli  
-Presentation slides [here](https://cutt.ly/ecgol/)
+Presentation slides [here](https://cutt.ly/ecgol)
 
 ### Introduction ###
 This project consists in applying Evolutionary Computation techniques 
