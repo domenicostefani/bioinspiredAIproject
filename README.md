@@ -8,6 +8,11 @@ This project consists in applying Evolutionary Computation techniques
 to Conway's Game of Life (or simply LIFE) in order to generate game entities that move across the game board
 in a specific way (eg. spaceships).
 
+### Project structure ###
+Python is used to perform Evolutionary Computation using the ___inspyred___ framework, while the _simulator_ is written in C++ because the simulation may require thousands of game iterations and speed is required.
+Note: Similar Python and C++ implementations of the simulator showed a 100-fold difference in the time requred for the same simulations.  
+The _simulator_ is a module that contains the implementation of Conway's game of LIFE, some custom stopping criterions and the computation of several metrics required for fitness evaluation.
+
 ### Files and folders: ###
 - `LIFEcore/`   Folder containing the source code for the simulator
 - `animation/`  Folder containing animation utilities
@@ -33,4 +38,4 @@ Run:
 `python main.py` 
   
   
-This was part of a university project and it is not really designed for the public or for wide compatibility. Anyway if you think that this could be useful for you and/or you find a bug that prevents you from using this code, feel free to open a issue and contact me.
+_Author note: This was part of a university project and it is not really designed for the public or for wide compatibility. Anyway if you think that this could be useful for you and/or you find a bug that prevents you from using this code, feel free to open a issue and contact me._
