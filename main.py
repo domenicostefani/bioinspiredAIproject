@@ -26,11 +26,11 @@ TARGET = (N-4,N-4)
 
 """--Parameters for the EC---------------------------------------------------"""
 
-populationSize = 20
+populationSize = 30
 numberOfGenerations = 100
 numberOfEvaluations = 2500                    # used with evaluation_termination
 tournamentSize = 3
-mutationRate = 0.3
+mutationRate = 0.8
 gaussianMean = 0
 gaussianStdev = 10.0
 crossoverRate = 0.95
@@ -147,8 +147,11 @@ def main(rng, seed, display=False):
     if display:
         final_pop.sort(reverse=True)
         print(final_pop[0])
-        life.display(life.genotype_to_grid(final_pop[0].candidate))
-        life.savegrid(life.genotype_to_grid(final_pop[0].candidate),"./bestindividual.txt")
+        candidate = final_pop[0].candidate
+        grid = life.genotype_to_grid(candidate)
+        life.display(grid)
+        life.savegrid(grid,"./bestindividual.txt")
+        life.create_animation(candidate,MAX_ITERATIONS,TARGET)
 
 
 if __name__ == "__main__":
