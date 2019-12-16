@@ -27,6 +27,7 @@ elif GENOTYPE == "matrix":
 """ Configuration files for c++ core """
 CONFIGFILE = "./config/config.txt"
 RESULTSFILE = "./result.txt"
+ANIMATION_FOLDER = "./animation/"
 
 # grid size
 N = -1
@@ -145,3 +146,13 @@ def compute_fitness(genotype,max_it,target):
         print("")
 
     return distance,size,iterations
+
+def create_animation(genotype,max_it,target):
+    automaton = genotype_to_grid(genotype)
+    savegrid(automaton,CONFIGFILE)
+    command = './displaycore ' + CONFIGFILE + ' ' + str(max_it) + ' ' +  str(target[0]) + ' ' + str(target[1]) + ' ' + RESULTSFILE + ' ' + ANIMATION_FOLDER
+    print(command)
+    output = os.system(command)
+
+    if output is not 0:
+        print("ERROR: bad results from DISPLAY core")
