@@ -3,3 +3,6 @@ __pycache__
 config/*
 /LIFEcore/dist/
 /LIFEcore/build/
+/animation/*.bmp
+/animation/*.gif
+/LIFEcore/nbproject/
