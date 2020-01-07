@@ -52,7 +52,7 @@
 /*----------------------------------------------------------------------------*/
 
 //#define VERBOSE   // Compile this for verbose output and display (debug only)
-#define SAVEVIDEO   // Compile with this flag to produce the image animation
+//#define SAVEVIDEO   // Compile with this flag to produce the image animation
 
 /*----------------------------------------------------------------------------*/
 /* CONSTANTS                                                                  */
@@ -79,6 +79,11 @@ void save_img(bool grid[][R_SIZE], string filename, int magnification,
               short targetX, short targetY);
 #endif
 
+struct Boundaries {
+    short min_i = max_bound, max_i= min_bound;
+    short min_j = max_bound, max_j = min_bound;
+};
+
 /**
  * Copy @gridOne into @gridTwo
  * @param gridOne structure to copy
@@ -90,42 +95,42 @@ void copygrid(bool gridOne[R_SIZE][R_SIZE], bool gridTwo[R_SIZE][R_SIZE]);
  * Check if two grids are equal
  * @param gridOne
  * @param gridTwo
- * @return True if the two grids are equal, False otherwise
+ * @return 
  */
 bool boolgridequal(bool gridOne[R_SIZE][R_SIZE], bool gridTwo[R_SIZE][R_SIZE]);
 
 /**
  * Compute the boundaries (indexes) of the set of alive cells (automaton)
- * @param grid  game board
- * @param min_i minimum i value (return)
- * @param max_i maximum i value (return)
- * @param min_j minimum j value (return)
- * @param max_j maximum j value (return)
+ * @param grid
+ * @param b
  */
-void bounds(bool grid[R_SIZE][R_SIZE],short &min_i,short &max_i,short &min_j,
-            short &max_j);
+Boundaries compute_bounds(bool grid[R_SIZE][R_SIZE]);
 
 /**
  * Compute the center of the bounding box of the automaton
- * @param min_i   minimum i value
- * @param max_i   maximum i value
- * @param min_j   minimum j value
- * @param max_j   maximum j value
- * @param xc      x coordinate of the center
- * @param yc      y coordinate of the center
+ * @param b
+ * @param xc
+ * @param yc
  */
-void center_of_mass(short min_i,short max_i,short min_j,short max_j, short &xc, 
+void center_of_mass(Boundaries b, short &xc, 
                     short &yc);
 
 /**
- * Compute the surface of the bounding box of the automaton
- * @param min_i   minimum i value
- * @param max_i   maximum i value
- * @param min_j   minimum j value
- * @param max_j   maximum j value
- * @return        surface of the bounding box of the automaton
+ * Computes the chebyshev distance between the center of the given bounds and 
+ * the target
+ * @param tX
+ * @param tY
+ * @param b
+ * @return 
  */
-int automatonsize(short min_i,short max_i,short min_j,short max_j);
+int chebyshev_distance(short tX, short tY, Boundaries b);
+
+/**
+ * Compute the surface of the bounding box of the automaton
+ * @param b
+ * @return 
+ */
+int automatonsize(Boundaries b);
 
 /**
  * Simulate one iteration of LIFE
@@ -202,6 +207,11 @@ int main(int argc, char** argv)
   
   bool reached = false;
   int iterations;
+  long int sizeaccumulator = 0;
+  int max_size = 0;
+  int partial_size = 0;
+  int min_distance = 0;
+  int partial_distance = 0;
   int countTrue = 0;
   bool previous_grid[R_SIZE][R_SIZE] = {false};
   bool previous_previous_grid[R_SIZE][R_SIZE] = {false};
@@ -214,12 +224,33 @@ int main(int argc, char** argv)
 #ifdef SAVEVIDEO
     save_img(grid,folder + "0000.bmp",10,targetX,targetY);
 #endif
+    
+  /* Compute size and distance for initial configuration */
+  // Size
+  Boundaries automata_bounds = compute_bounds(grid);
+  max_size = automatonsize(automata_bounds);
+  sizeaccumulator += max_size;
+  // Distance
+  min_distance = chebyshev_distance(targetX,targetY,automata_bounds);
   
   for(int i = 0; i < max_it; i++){
     iterations = i+1;
     copygrid(previous_grid,previous_previous_grid);
     copygrid(grid,previous_grid);
+    /* Run one iteration of LIFE (update) */
     countTrue = update(grid);
+    /*------------------------------------*/
+    // Compute size
+    Boundaries automata_bounds = compute_bounds(grid);
+    partial_size = automatonsize(automata_bounds);
+    sizeaccumulator += partial_size;
+    if(partial_size > max_size)
+      max_size = partial_size;
+    // Compute distance
+    partial_distance = chebyshev_distance(targetX,targetY,automata_bounds);
+    if(partial_distance < min_distance)
+      min_distance = partial_distance;
+    
 #ifdef VERBOSE
       display2(grid,targetY,targetX);
       std::cin.ignore();
@@ -259,40 +290,50 @@ int main(int argc, char** argv)
       break;
     }
   }
-  
-  
-  
-  short min_i = max_bound, max_i= min_bound;
-  short min_j = max_bound, max_j = min_bound;
-  bounds(grid,min_i,max_i,min_j,max_j);
-  
+   
+  Boundaries final_automata_bounds = compute_bounds(grid);
   
   int distance = 0;
-  int size = 0;
+  int final_size = 0;
+  int avg_size = 0;
   
   /// distance
   if (reached)
       distance = 0;
-  else{
-      short xc,yc;
-      center_of_mass(min_i,max_i,min_j,max_j,xc,yc);
-      // chebyshev distance
-      distance = max(abs(xc - targetX),abs(yc - targetY));
-  }
-  /// size
-  size = automatonsize(min_i,max_i,min_j,max_j);
+  else
+      distance = chebyshev_distance(targetX,targetY,final_automata_bounds);
+  
+  /// Final automata size
+  final_size = automatonsize(final_automata_bounds);
 
   /// iterations
   //  iterations is already correct
   
+  
+  /// Maximum automatasize
+  //  max_size already computed
+  
+  /// Average automatasize
+  avg_size = (int) sizeaccumulator / (iterations+1); //Sum 1 to account for init
+  
+  /// Min distance
+  // already computed
+  
   FILE * fp;
   fp = fopen (out_filename.c_str(),"w");
-  fprintf(fp,"%d\n%d\n%d\n", distance,size,iterations); 
+  fprintf(fp,"%d\n%d\n%d\n%d\n%d\n%d\n", distance,final_size,iterations,max_size,
+                                     avg_size,min_distance); 
   fclose (fp);
   
   return 0;
 }
 
+int chebyshev_distance(short targetX, short targetY, Boundaries b){
+  short xc,yc;
+  center_of_mass(b,xc,yc);
+  // chebyshev distance
+  return max(abs(xc - targetX),abs(yc - targetY));
+}
 
 void copygrid(bool gridOne[R_SIZE][R_SIZE], bool gridTwo[R_SIZE][R_SIZE]){
   for (int i = min_bound; i < max_bound; i++) 
@@ -308,31 +349,33 @@ bool boolgridequal(bool gridOne[R_SIZE][R_SIZE], bool gridTwo[R_SIZE][R_SIZE]){
   return true;
 }
 
-void bounds(bool grid[R_SIZE][R_SIZE],short &min_i,short &max_i,short &min_j,short &max_j){
+Boundaries compute_bounds(bool grid[R_SIZE][R_SIZE]){
+  Boundaries b;
   for(short i=min_bound; i < max_bound; ++i){
     for(short j=min_bound; j < max_bound; ++j){
       if(grid[i][j] == true){
-          if(i < min_i)
-               min_i = i;
-          else if( i > max_i)
-              max_i = i;
+          if(i < b.min_i)
+               b.min_i = i;
+          else if( i > b.max_i)
+              b.max_i = i;
 
-          if(j < min_j)
-              min_j= j;
-          else if(j > max_j)
-              max_j = j;
+          if(j < b.min_j)
+              b.min_j= j;
+          else if(j > b.max_j)
+              b.max_j = j;
       }
     }
   }
+  return b;
 }
 
-void center_of_mass(short min_i,short max_i,short min_j,short max_j, short &xc, short &yc){
-    xc = int((max_j + min_j) / 2);
-    yc = int((max_i + min_i) / 2);
+void center_of_mass(Boundaries b, short &xc, short &yc){
+    xc = int((b.max_j + b.min_j) / 2);
+    yc = int((b.max_i + b.min_i) / 2);
 }
 
-int automatonsize(short min_i,short max_i,short min_j,short max_j){
-    return (max_i - min_i + 1) * (max_j - min_j + 1);
+int automatonsize(Boundaries b){
+    return (b.max_i - b.min_i + 1) * (b.max_j - b.min_j + 1);
 }
 
 

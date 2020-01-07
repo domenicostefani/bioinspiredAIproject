@@ -27,6 +27,7 @@ elif GENOTYPE == "matrix":
 """ Configuration files for c++ core """
 CONFIGFILE = "./config/config.txt"
 RESULTSFILE = "./result.txt"
+BESTRESULTSFILE = "./bestresult.txt"
 ANIMATION_FOLDER = "./animation/"
 
 # grid size
@@ -57,6 +58,10 @@ def display(mgrid):
         print("")
 
 def savegrid(grid,filename):
+    directory,_ = os.path.split(filename)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
     f = open(filename,"w")
     for i in range(min_bound,max_bound):
         for j in range(min_bound,max_bound):
@@ -120,7 +125,9 @@ def readFileAsMatrix(file):
 
 def compute_fitness(genotype,max_it,target):
     distance = math.inf # inverse of proximity
-    size = math.inf # inverse of compactness
+    final_size = math.inf # inverse of compactness
+    max_size = math.inf
+    avg_size = math.inf
     iterations = math.inf # inverse of speed
     reached = False
 
@@ -134,25 +141,53 @@ def compute_fitness(genotype,max_it,target):
         print("ERROR: bad results from c++ core")
 
     results = readFileAsMatrix(RESULTSFILE)
-    distance = results[0][0]
-    size = results[1][0]
-    iterations = results[2][0]
+    ## Content:
+    # 0 - Final distance
+    # 1 - Final size
+    # 2 - iterations
+    # 3 - MAXIMUM size (across all iterations)
+    # 4 - AVERAGE size (across all iterations)
+    # 5 - MINIMUM distance from target (across all iterations)
+
+    final_distance = results[0][0]
+    final_size = results[1][0]
+    if (final_distance == 0):
+        iterations = results[2][0]
+    else:
+        iterations = max_it
+    max_size = results[3][0]
+    avg_size = results[4][0]
+    min_distance = results[5][0]
     os.remove(RESULTSFILE)
 
     if VERBOSE:
-        print("Distance: " + str(distance))
-        print("Size: " + str(size))
+        print("Final Distance: " + str(final_distance))
+        print("Minimum Distance: " + str(min_distance))
+        print("Final Size: " + str(final_size))
+        print("Max Size: " + str(max_size))
+        print("Avg Size: " + str(avg_size))
         print("Iterations: " + str(iterations))
         print("")
 
-    return distance,size,iterations
+    return (final_distance,min_distance),(final_size,max_size,avg_size),iterations
 
 def create_animation(genotype,max_it,target):
+    os.system(ANIMATION_FOLDER + "clean.sh")
+
     automaton = genotype_to_grid(genotype)
     savegrid(automaton,CONFIGFILE)
-    command = './displaycore ' + CONFIGFILE + ' ' + str(max_it) + ' ' +  str(target[0]) + ' ' + str(target[1]) + ' ' + RESULTSFILE + ' ' + ANIMATION_FOLDER
+    command = './displaycore ' + CONFIGFILE + ' ' + str(max_it) + ' ' +  str(target[0]) + ' ' + str(target[1]) + ' ' + BESTRESULTSFILE + ' ' + ANIMATION_FOLDER
     print(command)
     output = os.system(command)
 
     if output is not 0:
         print("ERROR: bad results from DISPLAY core")
+
+    results = readFileAsMatrix(BESTRESULTSFILE)
+    final_distance = results[0][0]
+    final_size = results[1][0]
+    iterations = results[2][0]
+    print("# Best individual Performance #")
+    print("final_distance: " + str(final_distance))
+    print("final_size: " + str(final_size))
+    print("iterations: " + str(iterations))

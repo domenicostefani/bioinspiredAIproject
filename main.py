@@ -62,11 +62,23 @@ class AutomatonEvaluator():
     def evaluator(self, candidates, args):
         fitness = []
         for candidate in candidates:
-            distance, size, iterations = life.compute_fitness(candidate,MAX_ITERATIONS,TARGET)
+            distances,sizes,iterations = life.compute_fitness(candidate,
+                                                              MAX_ITERATIONS,
+                                                              TARGET)
 
-            """-----------Fitness formulation--------------"""
-            fitness_c  = distance + size #+ iterations
-            """--------------------------------------------"""
+            (final_distance,min_distance) = distances
+            (final_size,max_size,avg_size) = sizes
+
+            """-----------Fitness formulation--------------------------------"""
+            if(final_distance != 0):
+                iterations = 1000
+                max_size = 1600
+            # else:
+            #     print("iterations: " + str(iterations))
+            #     print("max_size  : " + str(max_size))
+
+            fitness_c  = (1 * min_distance) + (1 * iterations) + (10 * max_size)
+            """--------------------------------------------------------------"""
 
             fitness.append(fitness_c)
         self.genCount += 1
@@ -110,8 +122,8 @@ def main(rng, seed, display=False):
     #ea.replacer = inspyred.ec.replacers.truncation_replacement
     #ea.replacer = inspyred.ec.replacers.steady_state_replacement
     #ea.replacer = inspyred.ec.replacers.random_replacement
-    #ea.replacer = inspyred.ec.replacers.plus_replacement
-    #ea.replacer = inspyred.ec.replacers.comma_replacement
+    # ea.replacer = inspyred.ec.replacers.plus_replacement
+    # ea.replacer = inspyred.ec.replacers.comma_replacement
     #ea.replacer = inspyred.ec.replacers.crowding_replacement
     #ea.replacer = inspyred.ec.replacers.simulated_annealing_replacement
     #ea.replacer = inspyred.ec.replacers.nsga_replacement
