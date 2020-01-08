@@ -10,6 +10,7 @@
 import numpy as np
 import math
 import os
+import copy
 
 VERBOSE = False
 
@@ -204,3 +205,37 @@ def create_animation(genotype,max_it,target):
     print("final_distance: " + str(final_distance))
     print("final_size: " + str(final_size))
     print("iterations: " + str(iterations))
+
+
+## Life-iteration for matrix genotype
+#
+#  Perform one update or iteration of LIFE on the sole genotype matrix
+#  This can be used as a custom mutation operator
+def lifeiteration(in_genotype):
+    in_genotype = np.reshape(in_genotype,(GENOTYPEySIZE,GENOTYPExSIZE))
+    genotype = copy.copy(in_genotype)
+
+    # Create 1 cell padding around the genotype
+    padded_genotype = np.zeros((GENOTYPEySIZE+2,GENOTYPEySIZE+2),dtype=bool)
+    padded_genotype[1:1+GENOTYPEySIZE,1:1+GENOTYPExSIZE] = genotype
+
+    for i in range(1, GENOTYPEySIZE+1):
+        for j in range(1, GENOTYPExSIZE+1):
+            total = int(padded_genotype[i,j-1]) + int(padded_genotype[i,j+1]) +                    int(padded_genotype[i-1,j]) + int(padded_genotype[i+1,j]) + int(padded_genotype[i-1,j-1]) + int(padded_genotype[i-1,j+1]) + int(padded_genotype[i+1,j-1]) + int(padded_genotype[i+1,j+1])
+
+            if(padded_genotype[i,j] == True):
+                if(total >= 2 and total <= 3):
+                    genotype[i-1,j-1] = True
+                    # using -1 because @genotype is not padded
+                else:
+                    genotype[i-1,j-1] = False
+                    # using -1 because @genotype is not padded
+            else:
+                if (total == 3):
+                    genotype[i-1,j-1] = True
+                    # using -1 because @genotype is not padded
+                else:
+                    genotype[i-1,j-1] = False
+                    # using -1 because @genotype is not padded
+
+    return genotype.flatten()

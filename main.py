@@ -43,6 +43,7 @@ numElites = 2
 display = True
 SHOW_BEFOREAFTER_LIFEFLIP = False
 SHOW_BEFOREAFTER_RESETRANDOM = False
+SHOW_BEFOREAFTER_LIFEITERATION = False
 """--------------------------------------------------------------------------"""
 
 # this object is used for single-thread evaluations (only pickleable objects can be used in multi-thread)
@@ -271,9 +272,6 @@ def life_flip_mutation(random, candidate, args):
     - *mutation_rate* -- the rate at which mutation is performed (default 0.1)
                          The mutation rate is applied on a bit by bit basis.
     """
-    if(SHOW_BEFOREAFTER_LIFEFLIP):
-        print("\nBefore")
-        life.display_genotype(candidate)
 
     rate = args.setdefault('mutation_rate', 0.1)
     mutant = copy.copy(candidate)
@@ -282,6 +280,8 @@ def life_flip_mutation(random, candidate, args):
             mutant[i] = not mutant[i]
 
     if(SHOW_BEFOREAFTER_LIFEFLIP):
+        print("\nBefore")
+        life.display_genotype(candidate)
         print("\nAfter")
         life.display_genotype(mutant)
     return mutant
@@ -302,10 +302,6 @@ def resetrandom_mutation(random, candidate, args):
     rate = args.setdefault('mutation_rate', 0.1)
     bias = args.setdefault('flip_bias', 0.5)
 
-    if(SHOW_BEFOREAFTER_RESETRANDOM):
-        print("\nBefore")
-        life.display_genotype(candidate)
-
     mutant = copy.copy(candidate)
     for i, m in enumerate(mutant):
         if random.random() < rate:
@@ -315,11 +311,38 @@ def resetrandom_mutation(random, candidate, args):
                 mutant[i] = False
 
     if(SHOW_BEFOREAFTER_RESETRANDOM):
+        print("\nBefore")
+        life.display_genotype(candidate)
         print("\nAfter")
         life.display_genotype(mutant)
 
     return mutant
 
+def lifeiteration_mutation(random, candidate, args):
+    """Perform one iteration of LIFE as a mutation
+       Applied globally to the genotype, not on an element base
+
+    .. Arguments:
+       random -- the random number generator object
+       candidate -- the candidate solution
+       args -- a dictionary of keyword arguments
+
+    Optional keyword arguments in args:
+    - *mutation_rate* -- the rate at which mutation is performed (default 0.1)
+    """
+    rate = args.setdefault('mutation_rate', 0.1)
+
+    mutant = copy.copy(candidate)
+    if random.random() < rate:
+        mutant = life.lifeiteration(candidate)
+
+        if(SHOW_BEFOREAFTER_LIFEITERATION):
+            print("\nBefore")
+            life.display_genotype(candidate)
+            print("\nAfter")
+            life.display_genotype(mutant)
+
+    return mutant
 
 def main(rng, seed, display=False):
     problem = AutomatonEvaluator(seed)
@@ -359,7 +382,9 @@ def main(rng, seed, display=False):
                     inspyred.ec.variators.crossover(XORcrossover),
                     inspyred.ec.variators.crossover(SUBcrossover),
                     inspyred.ec.variators.mutator(life_flip_mutation),
-                    inspyred.ec.variators.mutator(resetrandom_mutation)]
+                    inspyred.ec.variators.mutator(resetrandom_mutation),
+                    inspyred.ec.variators.mutator(lifeiteration_mutation)
+                    ]
 
     # replacement operator
     #ea.replacer = inspyred.ec.replacers.truncation_replacement
