@@ -57,6 +57,19 @@ def display(mgrid):
                 print("██", end = '')
         print("")
 
+## Print nicely the genotype only
+#
+#  Print in the console the genoptype in a compact way
+def display_genotype(genotype):
+    genotype = np.reshape(genotype,(GENOTYPEySIZE,GENOTYPExSIZE))
+    for i in range(GENOTYPEySIZE):
+        for j in range(GENOTYPExSIZE):
+            if genotype[i,j] == False:
+                print("░░", end = '')
+            else:
+                print("██", end = '')
+        print("")
+
 def savegrid(grid,filename):
     directory,_ = os.path.split(filename)
     if not os.path.exists(directory):
