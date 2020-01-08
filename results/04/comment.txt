@@ -1,0 +1,7 @@
+Same of the previous but with generational replacement and numElites = 10
+
+fitness_c  = (1 * min_distance) + (3 * iterations) + (10 * max_size)
+
+final_distance: 0.0
+final_size: 9.0
+iterations: 75.0
