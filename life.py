@@ -1,8 +1,9 @@
 #! /usr/bin/python3
 
 ## @package life
-#  Module that implements Conway's game of life and bridge with a genetic
-#  notation
+#  Module that implements Conway's game of life and a bridge with the notation
+#  of the evolutionary computation algorithm used in the main.py module to
+#  search for moving figures in LIFE.
 #
 #  Author:  Domenico Stefani
 #  Created: 04 nov 2019

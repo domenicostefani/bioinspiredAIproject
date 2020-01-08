@@ -1,7 +1,14 @@
 #! /usr/bin/python3
 
-#  Main test module to verify feasibility of the application of genetic
-#  computation and evolutionary algorithms to Conway's game of life
+#  Ec::GoL
+#  Project for the Bio-Inspired AI 2019 course at UNITN
+#  Authors: Domenico Stefani, Daniele Campli
+#
+#  This project consists in applying Evolutionary Computation techniques to
+#  Conway's Game of Life (or simply LIFE) in order to generate game entities
+#  that move across the game board in a specific way (eg. spaceships).
+#
+#  MAIN module
 #
 #  Author:  Domenico Stefani
 #  Created: 04 nov 2019
