@@ -31,13 +31,13 @@ populationSize = 50
 numberOfGenerations = 500
 numberOfEvaluations = 2500                    # used with evaluation_termination
 tournamentSize = 3
-mutationRate = 0.2
+mutationRate = 0.95
 gaussianMean = 0
 gaussianStdev = 10.0
-crossoverRate = 0.95
+crossoverRate = 0.10
 numCrossoverPoints =  5
 selectionSize = populationSize
-numElites = 2
+numElites = 10
 
 """--Visualization-----------------------------------------------------------"""
 display = True
@@ -66,12 +66,7 @@ class AutomatonEvaluator():
     def evaluator(self, candidates, args):
         fitness = []
         for candidate in candidates:
-            """
-            # TODO: Here we can computate also the INITIAL size and use it
-              in the fitness formulation.
-              Also the number of alive cells, maybe it's better cause on a
-              small matrix size does not vary much
-            """
+
             distances,sizes,iterations = life.compute_fitness(candidate,
                                                               MAX_ITERATIONS,
                                                               TARGET)
@@ -79,7 +74,7 @@ class AutomatonEvaluator():
             (final_distance,min_distance) = distances
             (final_size,max_size,avg_size) = sizes
 
-
+            initial_alive_cell_count = life.count_alive_cells(candidate)
 
             """-----------Fitness formulation--------------------------------"""
             """
@@ -90,15 +85,17 @@ class AutomatonEvaluator():
                 - max_size
                 - avg_size
                 - iterations
+                - initial_alive_cell_count
             """
             if(final_distance != 0):
-                iterations = 1000
-                max_size = 1600
+                iterations = MAX_ITERATIONS
+                max_size = N * N
+                initial_alive_cell_count = life.GENOTYPExSIZE * life.GENOTYPEySIZE
             # else:
             #     print("iterations: " + str(iterations))
             #     print("max_size  : " + str(max_size))
 
-            fitness_c  = (1 * min_distance) + (1 * iterations) + (10 * max_size)
+            fitness_c  = (1 * min_distance) + (3 * iterations) + (10 * max_size)
             """--------------------------------------------------------------"""
 
             fitness.append(fitness_c)
@@ -371,9 +368,9 @@ def main(rng, seed, display=False):
 
     # variation operators (mutation/crossover)
     ea.variator = [
-                    inspyred.ec.variators.gaussian_mutation,
+                    # inspyred.ec.variators.gaussian_mutation,
                     # inspyred.ec.variators.n_point_crossover,
-                    inspyred.ec.variators.random_reset_mutation,
+                    # inspyred.ec.variators.random_reset_mutation,
                     # # inspyred.ec.variators.inversion_mutation,
                     # inspyred.ec.variators.uniform_crossover,
                     # inspyred.ec.variators.partially_matched_crossover,
@@ -391,7 +388,7 @@ def main(rng, seed, display=False):
     #ea.replacer = inspyred.ec.replacers.steady_state_replacement
     #ea.replacer = inspyred.ec.replacers.random_replacement
     # ea.replacer = inspyred.ec.replacers.plus_replacement
-    # ea.replacer = inspyred.ec.replacers.comma_replacement
+    # ea.replacer = inspyred.ec.replacers.comma_replacement     #No elitism, bad in this case
     #ea.replacer = inspyred.ec.replacers.crowding_replacement
     #ea.replacer = inspyred.ec.replacers.simulated_annealing_replacement
     #ea.replacer = inspyred.ec.replacers.nsga_replacement
