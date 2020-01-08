@@ -1,0 +1,17 @@
+Parameters tuned
+Mainly mutation rate was increased from 0.2 to 0.7 and replacement was changed
+to plus strategy
+
+
+# Best individual Performance #
+final_distance: 0.0
+final_size: 9.0
+iterations: 79.0
+
+
+IDEA:
+Great mutation rate is better
+Standard comma replacement is excluded as elitism is crucial.
+Plus replacement is nice but it can be one of the reasons why the evolution
+seems to get stuck in a local minimum
+It could be better to use generational replacement with more than 2 elites
