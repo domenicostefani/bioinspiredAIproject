@@ -6,5 +6,5 @@ config/*
 /animation/*.bmp
 /animation/*.gif
 /animation/out/
-*.csv
-*.txt
+/*.csv
+/*.txt

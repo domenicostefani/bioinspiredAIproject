@@ -1,0 +1,49 @@
+
+#Parameters for LIFE
+
+MAX_ITERATIONS = 1000
+N = 40
+target [36,36]
+
+#Parameters for the EC
+
+populationSize = 50
+numberOfGenerations = 500
+numberOfEvaluations = 2500                    # used with evaluation_termination
+tournamentSize = 3
+mutationRate = 0.2
+gaussianMean = 0
+gaussianStdev = 10.0
+crossoverRate = 0.95
+numCrossoverPoints =  5
+selectionSize = populationSize
+numElites = 2
+
+
+
+#Mutators used:
+    Custom:
+        UNIONcrossover
+        INTERcrossover
+        XORcrossover
+        SUBcrossover
+        life_flip_mutation
+        resetrandom_mutation
+    Default:
+        inspyred.ec.variators.gaussian_mutation
+        inspyred.ec.variators.random_reset_mutation
+
+
++-------------------------Best individual Performance--------------------------+
+|   final_distance: 0.0                                                        |
+|   final_size: 9.0                                                            |
+|   iterations: 71.0                                                           |
++------------------------------------------------------------------------------+
+
+The first glider created from the start!
+Why this happened?
+This could be from the fact that by introducing custom operators, especially
+resetrandom_mutation and some of the crossover ops, we allow the system to
+explore sparse configurations with few alive cells.
+
+IDEA: I could implement a mutator operator that performs one iteration of life
