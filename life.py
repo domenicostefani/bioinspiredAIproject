@@ -239,3 +239,10 @@ def lifeiteration(in_genotype):
                     # using -1 because @genotype is not padded
 
     return genotype.flatten()
+
+def count_alive_cells(genotype):
+    counter = 0
+    for cell in np.reshape(genotype,-1):
+        if cell == True :
+            counter += 1
+    return counter
